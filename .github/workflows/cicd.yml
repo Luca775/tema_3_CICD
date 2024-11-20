@@ -3,78 +3,79 @@ name: CI/CD Backend Workflow
 on:
   push:
     branches:
-      - main  # o la rama que estés usando
+      - main
   pull_request:
     branches:
-      - main  # o la rama que estés usando
+      - main
 
 jobs:
-  # 1. Job de test y lint
   test-lint:
-    runs-on: ubuntu-latest  # El sistema operativo para ejecutar los jobs
+    runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.8'  # Usa la versión de Python que prefieras
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt  # Asegúrate de tener un archivo requirements.txt
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
 
-      - name: Run tests with Pytest
-        run: |
-          pytest  # Ejecutar los tests con Pytest
+    - name: Run Linter (ruff)
+      run: |
+        pip install ruff
+        ruff check .
 
-      - name: Run lint with Ruff
-        run: |
-          pip install ruff
-          ruff check .  # Ejecutar Ruff para linting del código
+    - name: Run Tests (pytest)
+      run: |
+        pip install pytest
+        pytest --maxfail=1 --disable-warnings -q
 
-  # 2. Job de Docker build y push a DockerHub
   docker-build-push-dockerhub:
     runs-on: ubuntu-latest
-    needs: test-lint  # Este job depende de que el job de test-lint pase
+    needs: test-lint  # Este job depende del anterior para que pase los tests y el lint primero
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Log in to DockerHub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}  # Asegúrate de añadir el secreto en GitHub
-          password: ${{ secrets.DOCKER_PASSWORD }}
+    - name: Log in to DockerHub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build Docker image
-        run: |
-          docker build -t myusername/calculadora-backend:latest .  # Asegúrate de usar tu nombre de usuario y el nombre correcto de la imagen
+    - name: Build Docker image
+      run: |
+        docker build -t ${{ secrets.DOCKER_USERNAME }}/calculadora-backend .
 
-      - name: Push Docker image to DockerHub
-        run: |
-          docker push myusername/calculadora-backend:latest  # Pushea la imagen a DockerHub
+    - name: Push Docker image to DockerHub
+      run: |
+        docker push ${{ secrets.DOCKER_USERNAME }}/calculadora-backend
 
-  # 3. Job de Docker build y push a GitHub Container Registry
   docker-build-push-github:
     runs-on: ubuntu-latest
-    needs: test-lint  # Este job depende de que el job de test-lint pase
+    needs: test-lint  # Este job también depende de pasar los tests y el lint
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v2
-        with:
-          username: ${{ github.actor }}  # Usa el usuario de GitHub
-          password: ${{ secrets.GITHUB_TOKEN }}  # Usa el token de GitHub
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v2
+      with:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Docker image
-        run: |
-          docker build -t ghcr.io/${{ github.repository }}/calculadora-backend:latest .  # Nombre de la imagen para GitHub Container Registry
+    - name: Build Docker image
+      run: |
+        docker build -t ghcr.io/${{ github.repository_owner }}/calculadora-backend .
 
-      - name: Push Docker image to GitHub Container Registry
-        run: |
-          docker push ghcr.io/${{ github.repository }}/calculadora-backend:latest  # Pushea la imagen al GitHub Container Registry
+    - name: Push Docker image to GitHub Container Registry
+      run: |
+        docker push ghcr.io/${{ github.repository_owner }}/calculadora-backend
