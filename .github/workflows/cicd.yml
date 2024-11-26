@@ -53,11 +53,11 @@ jobs:
 
     - name: Build Docker image
       run: |
-        docker build -t ${{ vars.DOCKERHUB_USERNAME }}/calculadora-backend .
+        docker build -t ${{ vars.DOCKERHUB_USERNAME }}/calculadorabk .
 
     - name: Push Docker image to DockerHub
       run: |
-        docker push ${{ vars.DOCKERHUB_USERNAME }}/calculadora-backend
+        docker push ${{ vars.DOCKERHUB_USERNAME }}/calculadorafront .
 
   docker-build-push-github:
     runs-on: ubuntu-latest
