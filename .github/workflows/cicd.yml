@@ -33,6 +33,12 @@ jobs:
 
   docker-build-push-dockerhub:
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+      attestations: write
+      id-token: write
+
     needs: test-lint  # Este job depende del anterior para que pase los tests y el lint primero
 
     steps:
@@ -56,7 +62,12 @@ jobs:
   docker-build-push-github:
     runs-on: ubuntu-latest
     needs: test-lint  # Este job también depende de pasar los tests y el lint
-
+    permissions:
+      packages: write
+      contents: read
+      attestations: write
+      id-token: write
+      
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
