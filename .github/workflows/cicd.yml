@@ -31,6 +31,33 @@ jobs:
         pip install ruff
         ruff check .
 
+  docker-build-push-github:
+    runs-on: ubuntu-latest
+    needs: test-lint  # Este job también depende de pasar los tests y el lint
+    permissions:
+      packages: write
+      contents: read
+      attestations: write
+      id-token: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Log in to GitHub Container Registry
+      uses: docker/login-action@v1
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GIT_TOKEN }}
+
+    - name: Build Docker image
+      run: |
+        docker build -t ghcr.io/${{ github.repository_owner }}/calculadora-backend .
+
+    - name: Push Docker image to GitHub Container Registry
+      run: |
+        docker push ghcr.io/${{ github.repository_owner }}/calculadora-backend
+
   docker-build-push-dockerhub:
     runs-on: ubuntu-latest
     permissions:
@@ -59,29 +86,4 @@ jobs:
       run: |
         docker push ${{ vars.DOCKERHUB_USERNAME }}/calculadora-bk
 
-  docker-build-push-github:
-    runs-on: ubuntu-latest
-    needs: test-lint  # Este job también depende de pasar los tests y el lint
-    permissions:
-      packages: write
-      contents: read
-      attestations: write
-      id-token: write
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    - name: Log in to GitHub Container Registry
-      uses: docker/login-action@v1
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GIT_TOKEN }}
-
-    - name: Build Docker image
-      run: |
-        docker build -t ghcr.io/${{ github.repository_owner }}/calculadora-backend .
-
-    - name: Push Docker image to GitHub Container Registry
-      run: |
-        docker push ghcr.io/${{ github.repository_owner }}/calculadora-backend
+  
