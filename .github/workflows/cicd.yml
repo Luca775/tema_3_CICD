@@ -33,7 +33,7 @@ jobs:
 
   docker-build-push-github:
     runs-on: ubuntu-latest
-    needs: test-lint  # Este job depende de pasar los tests y el lint
+    needs: test-lint  # Este jobB depende de pasar los tests y el lint
     permissions:
       packages: write
       contents: read
