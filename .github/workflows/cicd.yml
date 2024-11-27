@@ -14,7 +14,8 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4  # Usamos la versión más reciente
+      uses: actions/checkout@v2
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
@@ -41,7 +42,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4  # Usamos la misma versión de checkout
+      uses: actions/checkout@v4
     - name: Log in to GitHub Container Registry
       uses: docker/login-action@v2
       with:
@@ -51,11 +52,12 @@ jobs:
 
     - name: Build Docker image
       run: |
-        docker build -t ghcr.io/${{ github.repository_owner | lower }}/calculadora-backend .
+        # Convertimos el nombre del repositorio a minúsculas en el comando de build
+        docker build -t ghcr.io/$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')/calculadora-backend .
 
     - name: Push Docker image to GitHub Container Registry
       run: |
-        docker push ghcr.io/${{ github.repository_owner | lower }}/calculadora-backend
+        docker push ghcr.io/$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')/calculadora-backend
 
   docker-build-push-dockerhub:
     runs-on: ubuntu-latest
@@ -69,7 +71,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4  # Usamos la misma versión de checkout
+      uses: actions/checkout@v2  # Usamos la versión de checkout más estable
     - name: Log in to DockerHub
       uses: docker/login-action@v2
       with:
@@ -78,8 +80,9 @@ jobs:
 
     - name: Build Docker image
       run: |
-        docker build -t ${{ secrets.DOCKER_USERNAME | lower }}/calculadora-bk .
+        # Convertimos el nombre del repositorio a minúsculas en el comando de build
+        docker build -t $(echo ${{ secrets.DOCKER_USERNAME }} | tr '[:upper:]' '[:lower:]')/calculadora-bk .
 
     - name: Push Docker image to DockerHub
       run: |
-        docker push ${{ secrets.DOCKER_USERNAME | lower }}/calculadora-bk
+        docker push $(echo ${{ secrets.DOCKER_USERNAME }} | tr '[:upper:]' '[:lower:]')/calculadora-bk
